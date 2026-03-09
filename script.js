@@ -7,7 +7,7 @@ const App = () => {
         return saved ? JSON.parse(saved) : { children: [] };
     });
 
-    // Navigation state: { screen: 'dashboard' | 'child' | 'friend-form' | 'child-form', childId?, friendId? }
+    // Navigation state: { screen: 'dashboard' | 'child' | 'friend-form' | 'child-form' | 'friend-details', childId?, friendId?, initialFriend? }
     const [view, setView] = useState({ screen: 'dashboard' });
 
     // Persist data
@@ -34,6 +34,18 @@ const App = () => {
         setView({ screen: 'child', childId });
     };
 
+    const updateFriend = (childId, friendId, updatedFriend) => {
+        setData(prev => ({
+            ...prev,
+            children: prev.children.map(c => 
+                c.id === childId 
+                ? { ...c, friends: c.friends.map(f => f.id === friendId ? { ...updatedFriend, id: friendId } : f) }
+                : c
+            )
+        }));
+        setView({ screen: 'friend-details', childId, friendId });
+    };
+
     const deleteChild = (id) => {
         if (confirm('Delete this child and all their friends?')) {
             setData(prev => ({ ...prev, children: prev.children.filter(c => c.id !== id) }));
@@ -53,6 +65,33 @@ const App = () => {
             }));
             setView({ screen: 'child', childId });
         }
+    };
+
+    const exportData = () => {
+        const json = JSON.stringify(data, null, 2);
+        if (navigator.share) {
+            navigator.share({
+                title: 'Parent Names Data',
+                text: 'Here is my Parent Names app data export.',
+                files: [new File([json], 'parent-names-export.json', { type: 'application/json' })]
+            }).catch(err => {
+                console.log('Error sharing:', err);
+                // Fallback to clipboard if share fails (common for files)
+                downloadJson(json);
+            });
+        } else {
+            downloadJson(json);
+        }
+    };
+
+    const downloadJson = (json) => {
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'parent-names-export.json';
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     // Components
@@ -84,6 +123,12 @@ const App = () => {
             >
                 + Add Child
             </button>
+            <button 
+                className="w-full text-black font-bold p-4 mt-8 border-2 border-black rounded-lg"
+                onClick={exportData}
+            >
+                Export Data
+            </button>
         </div>
     );
 
@@ -103,8 +148,17 @@ const App = () => {
                 ) : (
                     child.friends.map(friend => (
                         <div key={friend.id} className="card" onClick={() => setView({ screen: 'friend-details', childId, friendId: friend.id })}>
-                            <div className="font-bold text-lg">{friend.name}</div>
-                            <div className="text-gray-600 text-sm">Parents: {friend.parents}</div>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="font-bold text-lg">{friend.name}</div>
+                                    <div className="text-gray-600 text-sm">Parents: {friend.parents}</div>
+                                </div>
+                                {friend.category && (
+                                    <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-1 rounded">
+                                        {friend.category}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     ))
                 )}
@@ -135,7 +189,19 @@ const App = () => {
                         <label className="block text-xs font-bold text-gray-400 uppercase">Siblings</label>
                         <div className="text-xl font-bold">{friend.siblings || 'None'}</div>
                     </div>
+                    {friend.category && (
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 uppercase">Category</label>
+                            <div className="text-xl font-bold">{friend.category}</div>
+                        </div>
+                    )}
                 </div>
+                <button 
+                    className="btn-high-contrast mt-4"
+                    onClick={() => setView({ screen: 'friend-form', childId, friendId, initialFriend: friend })}
+                >
+                    Edit Friend
+                </button>
                 <button 
                     className="w-full text-red-600 font-bold p-4 mt-8 border-2 border-red-600 rounded-lg"
                     onClick={() => deleteFriend(childId, friendId)}
@@ -171,11 +237,11 @@ const App = () => {
         );
     };
 
-    const FriendForm = ({ childId }) => {
-        const [f, setF] = useState({ name: '', parents: '', siblings: '' });
+    const FriendForm = ({ childId, friendId, initialFriend }) => {
+        const [f, setF] = useState(initialFriend || { name: '', parents: '', siblings: '', category: '' });
         return (
-            <div className="px-4">
-                <Header title="New Friend" onBack={() => setView({ screen: 'child', childId })} />
+            <div className="px-4 pb-20">
+                <Header title={friendId ? "Edit Friend" : "New Friend"} onBack={() => friendId ? setView({ screen: 'friend-details', childId, friendId }) : setView({ screen: 'child', childId })} />
                 <div className="card space-y-4">
                     <div>
                         <label className="block font-bold mb-1">Friend's Name</label>
@@ -202,10 +268,27 @@ const App = () => {
                             onChange={e => setF({...f, siblings: e.target.value})}
                         />
                     </div>
+                    <div>
+                        <label className="block font-bold mb-1">Category / Tag</label>
+                        <input 
+                            className="w-full p-3 border-2 border-black rounded-lg"
+                            value={f.category}
+                            onChange={e => setF({...f, category: e.target.value})}
+                            placeholder="e.g. School, Football"
+                        />
+                    </div>
                 </div>
                 <button 
                     className="btn-high-contrast"
-                    onClick={() => f.name && addFriend(childId, f)}
+                    onClick={() => {
+                        if (f.name) {
+                            if (friendId) {
+                                updateFriend(childId, friendId, f);
+                            } else {
+                                addFriend(childId, f);
+                            }
+                        }
+                    }}
                 >
                     Save Friend
                 </button>
@@ -218,7 +301,7 @@ const App = () => {
         case 'child': return <ChildView childId={view.childId} />;
         case 'friend-details': return <FriendDetails childId={view.childId} friendId={view.friendId} />;
         case 'child-form': return <ChildForm />;
-        case 'friend-form': return <FriendForm childId={view.childId} />;
+        case 'friend-form': return <FriendForm childId={view.childId} friendId={view.friendId} initialFriend={view.initialFriend} />;
         default: return <Dashboard />;
     }
 };
