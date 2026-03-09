@@ -1,0 +1,56 @@
+127.0.0.1 - - [09/Mar/2026 14:35:55] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [09/Mar/2026 14:35:56] "GET /manifest.json HTTP/1.1" 200 -
+127.0.0.1 - - [09/Mar/2026 14:35:56] "GET /script.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Mar/2026 14:35:56] "GET /sw.js HTTP/1.1" 200 -
+127.0.0.1 - - [09/Mar/2026 14:35:56] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [09/Mar/2026 14:35:56] code 404, message File not found
+127.0.0.1 - - [09/Mar/2026 14:35:56] "GET /favicon.ico HTTP/1.1" 404 -
+192.168.1.3 - - [09/Mar/2026 14:41:57] "GET / HTTP/1.1" 200 -
+192.168.1.3 - - [09/Mar/2026 14:41:58] "GET /script.js HTTP/1.1" 200 -
+192.168.1.3 - - [09/Mar/2026 14:41:58] code 404, message File not found
+192.168.1.3 - - [09/Mar/2026 14:41:58] "GET /favicon.ico HTTP/1.1" 404 -
+192.168.1.3 - - [09/Mar/2026 14:43:26] "GET /manifest.json HTTP/1.1" 200 -
+192.168.1.3 - - [09/Mar/2026 14:43:54] "GET /index.html HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.3', 39258)
+----------------------------------------
+Exception occurred during processing of request from ('192.168.1.3', 39248)
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/http/server.py", line 1311, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+  File "/usr/lib/python3.12/http/server.py", line 672, in __init__
+    super().__init__(*args, **kwargs)
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 404, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socketserver.py", line 692, in process_request_thread
+    self.finish_request(request, client_address)
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/http/server.py", line 1311, in finish_request
+    self.RequestHandlerClass(request, client_address, self,
+ConnectionResetError: [Errno 104] Connection reset by peer
+  File "/usr/lib/python3.12/http/server.py", line 672, in __init__
+    super().__init__(*args, **kwargs)
+----------------------------------------
+  File "/usr/lib/python3.12/socketserver.py", line 761, in __init__
+    self.handle()
+  File "/usr/lib/python3.12/http/server.py", line 436, in handle
+    self.handle_one_request()
+  File "/usr/lib/python3.12/http/server.py", line 404, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/socket.py", line 707, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+192.168.1.3 - - [09/Mar/2026 14:45:36] "GET /index.html HTTP/1.1" 304 -
